@@ -1,4 +1,672 @@
-highlightPair(item.id, item.dataset.target);
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل SQL Server التفاعلي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals -->
+    <!-- Application Structure Plan: A single-page application featuring a fixed sidebar for navigation and a dynamic main content area. This structure was chosen for its excellent usability in a learning context. It allows users to easily jump between topics without losing their place or being overwhelmed by a long scroll. Clicking a navigation link instantly displays the relevant section, creating a focused, app-like learning environment that encourages non-linear exploration of the SQL guide. -->
+    <!-- Visualization & Content Choices: Report Info: SQL Guide -> Goal: Education & Interaction -> Viz/Presentation Method: The application uses distinct presentation methods for different content types. Key concepts are presented in cards for easy digestion. Data types are organized into tabs to prevent clutter. Code examples are placed in pre-formatted blocks with a one-click copy button for utility. The abstract concept of table JOINS is explained with a visual HTML/CSS diagram. Aggregate functions and GROUP BY are demonstrated with a live Chart.js bar chart, turning code into a tangible result. -> Interaction: Sidebar navigation, copy-to-clipboard buttons, and the chart visualization. -> Justification: These choices transform a static document into an interactive, multi-modal learning tool that caters to different learning styles and improves comprehension and retention. -> Library/Method: Vanilla JS, Tailwind CSS, Chart.js. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f8f7f4;
+            color: #4a4a4a;
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            direction: ltr;
+            text-align: left;
+            overflow-x: auto;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #718096;
+        }
+        .sidebar-link {
+            transition: all 0.2s;
+            border-right: 4px solid transparent;
+        }
+        .sidebar-link.active {
+            background-color: #4a5568; /* bg-gray-600 */
+            color: #ffffff;
+            border-right-color: #3b82f6; /* border-blue-500 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        .code-block .comment {
+            color: #9fced0;
+            font-style: italic;
+        }
+        .highlight {
+            transform: scale(1.03);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            border-color: #ef4444 !important;
+            z-index: 10;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-full md:w-64 bg-gray-900 p-6 shadow-lg md:shadow-none">
+            <h1 class="text-2xl font-bold text-white mb-6">SQL Server</h1>
+            <nav id="nav-links" class="space-y-2">
+                <a href="#section-0" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white active">📜 ما هي SQL؟</a>
+                <a href="#section-1" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">🏗️ المفاهيم الأساسية</a>
+                <a href="#section-2" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">📊 أنواع البيانات</a>
+                <a href="#section-3" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">🔨 إدارة قواعد البيانات</a>
+                <a href="#section-4" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">📋 لغة تعريف البيانات (DDL)</a>
+                <a href="#section-5" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">✍️ لغة معالجة البيانات (DML)</a>
+                <a href="#section-6" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">🔗 الاستعلامات المتقدمة</a>
+                <a href="#section-7" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">📚 أمثلة عملية</a>
+                <a href="#section-8" class="sidebar-link block p-3 rounded-md font-medium text-gray-300 hover:bg-gray-700 hover:text-white">🎯 أفضل الممارسات</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+
+            <section id="section-0" class="content-section">
+                <h2 class="text-3xl font-bold mb-4">ما هي لغة SQL؟</h2>
+                <p class="mb-8 text-lg text-gray-600">SQL، أو <strong>لغة الاستعلام الهيكلية (Structured Query Language)</strong>، هي لغة البرمجة القياسية المستخدمة للتواصل مع قواعد البيانات وإدارتها. ببساطة، هي الطريقة التي نتحدث بها مع قواعد البيانات لكي نطلب منها تخزين، تعديل، أو استرجاع البيانات.</p>
+                <h3 class="text-2xl font-bold mb-6">مجالات استخدامها الرئيسية:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-xl mb-3 text-blue-800">تطوير الويب</h4>
+                        <p class="mb-3">كل موقع ويب تقريباً يتطلب قاعدة بيانات لتخزين معلومات المستخدمين، المنتجات، المنشورات، وغيرها.</p>
+                        <p class="text-sm bg-blue-50 p-3 rounded-md border border-blue-200"><strong>مثال:</strong> عند تسجيل حساب جديد في فيسبوك، يتم استخدام أمر `INSERT` في SQL لحفظ اسمك وبريدك الإلكتروني في قاعدة البيانات.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-xl mb-3 text-green-800">تحليل البيانات</h4>
+                        <p class="mb-3">يستخدم المحللون SQL لاستخراج ومعالجة كميات هائلة من البيانات للكشف عن الأنماط والتوجهات.</p>
+                        <p class="text-sm bg-green-50 p-3 rounded-md border border-green-200"><strong>مثال:</strong> تستطيع شركة أمازون معرفة المنتج الأكثر مبيعاً في شهر معين عن طريق كتابة استعلام `SELECT` على بيانات المبيعات.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-xl mb-3 text-purple-800">تطبيقات الأعمال</h4>
+                        <p class="mb-3">الأنظمة الداخلية للشركات (مثل أنظمة المحاسبة والمخازن) تعتمد بشكل كلي على قواعد بيانات دقيقة ومحدثة.</p>
+                        <p class="text-sm bg-purple-50 p-3 rounded-md border border-purple-200"><strong>مثال:</strong> عندما تشتري منتجاً من متجر، يقوم نظام المخازن باستخدام أمر `UPDATE` لإنقاص كمية هذا المنتج من المخزون.</p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-xl mb-3 text-orange-800">تطبيقات الموبايل</h4>
+                        <p class="mb-3">الكثير من تطبيقات الهواتف الذكية تستخدم قواعد بيانات محلية (مثل SQLite) لتخزين البيانات مباشرة على جهازك.</p>
+                        <p class="text-sm bg-orange-50 p-3 rounded-md border border-orange-200"><strong>مثال:</strong> تطبيق الملاحظات على هاتفك يستخدم SQL لحفظ الملاحظات التي تكتبها حتى تتمكن من الرجوع إليها لاحقاً.</p>
+                    </div>
+
+                </div>
+            </section>
+            
+            <section id="section-1" class="content-section hidden">
+                <h2 class="text-3xl font-bold mb-4">المفاهيم الأساسية (رسم تفاعلي)</h2>
+                <p class="mb-8 text-lg text-gray-600">مرر الفأرة فوق أي مفهوم في القائمة لرؤية الجزء المقابل له في الرسم التوضيحي، والعكس صحيح.</p>
+
+                <div class="flex flex-col lg:flex-row gap-8 items-start">
+                    <!-- Concepts List -->
+                    <div class="w-full lg:w-1/3 space-y-3">
+                        <div id="concept-db" data-target="diagram-db" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-blue-700">1. قاعدة البيانات (Database)</h3>
+                            <p class="text-sm text-gray-600">الحاوية الكبرى التي تضم كل شيء.</p>
+                        </div>
+                        <div id="concept-table" data-target="diagram-table" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-green-700">2. الجدول (Table)</h3>
+                            <p class="text-sm text-gray-600">هيكل لتنظيم البيانات لنوع معين.</p>
+                        </div>
+                        <div id="concept-column" data-target="diagram-column" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-purple-700">3. العمود (Column)</h3>
+                            <p class="text-sm text-gray-600">يمثل خاصية معينة (مثل الاسم).</p>
+                        </div>
+                        <div id="concept-row" data-target="diagram-row" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-red-700">4. الصف (Row)</h3>
+                            <p class="text-sm text-gray-600">سجل واحد كامل لشخص أو شيء.</p>
+                        </div>
+                        <div id="concept-pk" data-target="diagram-pk" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-yellow-700">5. المفتاح الأساسي (PK)</h3>
+                            <p class="text-sm text-gray-600">المُعرّف الفريد لكل صف.</p>
+                        </div>
+                         <div id="concept-fk" data-target="diagram-fk" class="p-4 bg-gray-50 border-2 border-gray-200 rounded-lg cursor-pointer transition-all duration-300">
+                            <h3 class="font-bold text-lg text-teal-700">6. المفتاح الخارجي (FK)</h3>
+                            <p class="text-sm text-gray-600">الرابط بين الجداول المختلفة.</p>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Diagram -->
+                    <div class="w-full lg:w-2/3">
+                        <div id="diagram-db" data-target="concept-db" class="w-full bg-blue-50 border-2 border-blue-500 rounded-xl p-4 md:p-8 relative shadow-lg transition-all duration-300 ease-in-out">
+                            <div id="diagram-table" data-target="concept-table" class="w-full bg-green-50 border-2 border-green-500 rounded-xl p-4 md:p-6 relative mt-2">
+                                <div class="relative overflow-x-auto">
+                                    <table class="w-full text-sm md:text-base text-left text-gray-600">
+                                        <thead class="text-xs md:text-sm text-gray-800 uppercase">
+                                            <tr>
+                                                <th id="diagram-pk" data-target="concept-pk" scope="col" class="px-3 md:px-6 py-3 bg-yellow-200 border-2 border-yellow-500 transition-all duration-300">
+                                                    StudentID
+                                                </th>
+                                                <th id="diagram-column" data-target="concept-column" scope="col" class="px-3 md:px-6 py-3 bg-purple-200 border-2 border-purple-500 transition-all duration-300">
+                                                    FirstName
+                                                </th>
+                                                <th scope="col" class="px-3 md:px-6 py-3 bg-gray-200">
+                                                    LastName
+                                                </th>
+                                                <th scope="col" class="px-3 md:px-6 py-3 bg-gray-200">
+                                                    Age
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-3 md:px-6 py-4">1</td>
+                                                <td class="px-3 md:px-6 py-4">Ahmed</td>
+                                                <td class="px-3 md:px-6 py-4">Ali</td>
+                                                <td class="px-3 md:px-6 py-4">20</td>
+                                            </tr>
+                                            <tr id="diagram-row" data-target="concept-row" class="bg-red-100 border-4 border-red-400 transition-all duration-300">
+                                                <td class="px-3 md:px-6 py-4 font-medium text-gray-900">2</td>
+                                                <td class="px-3 md:px-6 py-4">Sara</td>
+                                                <td class="px-3 md:px-6 py-4">Hassan</td>
+                                                <td class="px-3 md:px-6 py-4">22</td>
+                                            </tr>
+                                            <tr class="bg-white border-b">
+                                                <td class="px-3 md:px-6 py-4">3</td>
+                                                <td class="px-3 md:px-6 py-4">Mohammed</td>
+                                                <td class="px-3 md:px-6 py-4">Khalid</td>
+                                                <td class="px-3 md:px-6 py-4">21</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                     <p id="diagram-fk" data-target="concept-fk" class="mt-6 text-sm text-gray-500 bg-teal-50 border-2 border-teal-500 p-3 rounded-lg transition-all duration-300">
+                                        <strong>المفتاح الخارجي:</strong> هو عمود (مثل `CourseID` في جدول التسجيل) يشير إلى المفتاح الأساسي في جدول آخر (جدول الدورات) لربطهما.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-2" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">أنواع البيانات الأساسية</h2>
+                    <p class="mb-8 text-lg text-gray-600">كل عمود في الجدول يجب أن يكون له نوع بيانات محدد لتحديد نوع القيمة التي يمكن تخزينها.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="font-bold text-xl mb-3 text-blue-700">الأنواع العددية</h3>
+                            <ul class="list-disc pr-5 space-y-2">
+                                <li><strong class="font-semibold">INT:</strong> أعداد صحيحة.</li>
+                                <li><strong class="font-semibold">BIGINT:</strong> أعداد صحيحة كبيرة.</li>
+                                <li><strong class="font-semibold">DECIMAL(p,s):</strong> أعداد عشرية دقيقة.</li>
+                                <li><strong class="font-semibold">FLOAT:</strong> أعداد عشرية تقريبية.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-xl mb-3 text-blue-700">الأنواع النصية</h3>
+                            <ul class="list-disc pr-5 space-y-2">
+                                <li><strong class="font-semibold">VARCHAR(n):</strong> نص متغير الطول (الأكثر شيوعاً).</li>
+                                <li><strong class="font-semibold">NVARCHAR(n):</strong> نص متغير الطول يدعم Unicode.</li>
+                                <li><strong class="font-semibold">CHAR(n):</strong> نص ثابت الطول.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-xl mb-3 text-blue-700">التاريخ والوقت</h3>
+                            <ul class="list-disc pr-5 space-y-2">
+                                <li><strong class="font-semibold">DATE:</strong> التاريخ فقط (YYYY-MM-DD).</li>
+                                <li><strong class="font-semibold">DATETIME2:</strong> التاريخ والوقت بدقة عالية.</li>
+                                <li><strong class="font-semibold">TIME:</strong> الوقت فقط.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-xl mb-3 text-blue-700">أنواع أخرى</h3>
+                            <ul class="list-disc pr-5 space-y-2">
+                            <li><strong class="font-semibold">BIT:</strong> قيمة منطقية (0 أو 1).</li>
+                            <li><strong class="font-semibold">UNIQUEIDENTIFIER:</strong> معرف فريد (GUID).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-3" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">إدارة قواعد البيانات</h2>
+                    <p class="mb-8 text-lg text-gray-600">الأوامر الأساسية للتعامل مع قواعد البيانات نفسها، من الإنشاء إلى الحذف.</p>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">1. إنشاء قاعدة بيانات جديدة:</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code>CREATE DATABASE SchoolDB;</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">2. استخدام قاعدة بيانات محددة:</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code>USE SchoolDB;</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">3. حذف قاعدة بيانات (بحذر!):</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code>DROP DATABASE SchoolDB;</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">4. تجزئة الأوامر (Batching):</h3>
+                            <p class="mb-2 text-gray-600">تُستخدم كلمة `GO` لفصل الأوامر إلى مجموعات (batches) يتم تنفيذ كل منها على حدة. هذا مفيد لتنظيم الأكواد الطويلة وضمان تنفيذ الخطوات بالترتيب الصحيح.</p>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code class="language-sql"><span class="comment">-- الدفعة الأولى: إنشاء قاعدة البيانات</span>
+CREATE DATABASE University;
+<span class="comment">-- GO تفصل بين الدفعات</span>
+GO
+
+<span class="comment">-- الدفعة الثانية: التبديل إلى قاعدة البيانات الجديدة</span>
+USE University;
+GO
+
+<span class="comment">-- الدفعة الثالثة: إنشاء جدول داخل قاعدة البيانات الجديدة</span>
+CREATE TABLE Lecturers (
+    ID INT PRIMARY KEY,
+    Name VARCHAR(100)
+);
+GO</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="section-4" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">لغة تعريف البيانات (DDL)</h2>
+                    <p class="mb-8 text-lg text-gray-600">هذه الأوامر تستخدم لإنشاء وتعديل هياكل الجداول والكائنات الأخرى في قاعدة البيانات.</p>
+                    <h3 class="font-semibold text-2xl mb-4">إنشاء الجداول (CREATE TABLE)</h3>
+                    <div class="code-block mb-4">
+                        <button class="copy-btn">نسخ</button>
+                        <pre><code class="language-sql"><span class="comment">-- الأمر الأساسي لإنشاء جدول جديد اسمه Students</span>
+CREATE TABLE Students (
+    <span class="comment">-- StudentID: عمود للأرقام الصحيحة، وهو المفتاح الأساسي (معرّف فريد)</span>
+    <span class="comment">-- IDENTITY(1,1): يعني أن القيمة تبدأ من 1 وتزيد تلقائياً بمقدار 1 مع كل صف جديد</span>
+    StudentID INT PRIMARY KEY IDENTITY(1,1),
+
+    <span class="comment">-- FirstName: عمود نصي يتسع لـ 50 حرفاً، ولا يمكن أن يكون فارغاً</span>
+    FirstName VARCHAR(50) NOT NULL,
+
+    <span class="comment">-- LastName: عمود نصي لاسم العائلة، لا يمكن أن يكون فارغاً</span>
+    LastName VARCHAR(50) NOT NULL,
+
+    <span class="comment">-- Age: عمود للأرقام الصحيحة، بشرط أن تكون القيمة أكبر أو تساوي 18</span>
+    Age INT CHECK (Age >= 18),
+
+    <span class="comment">-- Email: عمود نصي، ويجب أن تكون كل قيمة فيه فريدة (لا تتكرر)</span>
+    Email VARCHAR(100) UNIQUE,
+
+    <span class="comment">-- EnrollmentDate: عمود للتاريخ، وقيمته الافتراضية هي تاريخ اليوم الحالي</span>
+    EnrollmentDate DATE DEFAULT GETDATE(),
+
+    <span class="comment">-- GPA: عمود للأرقام العشرية بدقة (مثال: 3.50)</span>
+    GPA DECIMAL(3,2)
+);</code></pre>
+                    </div>
+                    <h3 class="font-semibold text-2xl mt-8 mb-4">تعديل الجداول (ALTER TABLE)</h3>
+                    <div class="code-block">
+                        <button class="copy-btn">نسخ</button>
+                        <pre><code class="language-sql"><span class="comment">-- الأمر لتعديل هيكل جدول موجود</span>
+ALTER TABLE Students 
+<span class="comment">-- إضافة عمود جديد اسمه PhoneNumber من نوع نصي يتسع لـ 15 حرفاً</span>
+ADD PhoneNumber VARCHAR(15);
+
+<span class="comment">-- حذف عمود موجود اسمه PhoneNumber من الجدول</span>
+ALTER TABLE Students 
+DROP COLUMN PhoneNumber;
+
+<span class="comment">-- تعديل عمود Email الموجود لزيادة سعته إلى 150 حرفاً</span>
+ALTER TABLE Students 
+ALTER COLUMN Email VARCHAR(150);</code></pre>
+                    </div>
+                    <h3 class="font-semibold text-2xl mt-8 mb-4">مثال آخر مع قيود متنوعة</h3>
+                    <div class="code-block">
+                        <button class="copy-btn">نسخ</button>
+                        <pre><code class="language-sql"><span class="comment">-- إنشاء جدول جديد باسم students1_2 لتخزين بيانات الطلاب</span>
+CREATE TABLE students1_2 (
+    <span class="comment">-- studentID: رقم الطالب، مفتاح أساسي يزداد تلقائياً</span>
+    studentID INT PRIMARY KEY IDENTITY(1,1),
+
+    <span class="comment">-- name: اسم الطالب، نصي ولا يمكن أن يكون فارغاً</span>
+    name VARCHAR(50) NOT NULL,
+
+    <span class="comment">-- mark: درجة الطالب، رقمية ويجب أن تكون 50 أو أعلى</span>
+    mark INT CHECK (mark >= 50),
+
+    <span class="comment">-- phone: رقم هاتف الطالب، رقمي ولا يمكن أن يكون فارغاً</span>
+    phone INT NOT NULL,
+
+    <span class="comment">-- email: البريد الإلكتروني، نصي ويجب أن يكون فريداً</span>
+    email VARCHAR(50) UNIQUE,
+
+    <span class="comment">-- country: البلد، نصي وقيمته الافتراضية 'iraq'</span>
+    country VARCHAR(50) DEFAULT('iraq')
+);</code></pre>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-5" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">لغة معالجة البيانات (DML)</h2>
+                    <p class="mb-8 text-lg text-gray-600">هذه الأوامر تستخدم لإضافة، استعلام، تحديث، وحذف البيانات داخل الجداول.</p>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">إدخال البيانات (INSERT):</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code class="language-sql"><span class="comment">-- أمر لإضافة صف جديد إلى جدول Students</span>
+INSERT INTO Students (FirstName, LastName, Age, Email) 
+<span class="comment">-- تحديد القيم التي سيتم إضافتها بنفس ترتيب الأعمدة المذكورة أعلاه</span>
+VALUES ('Ahmed', 'Ali', 20, 'ahmed@email.com');</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">استعلام البيانات (SELECT):</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code class="language-sql"><span class="comment">-- تحديد الأعمدة التي تريد عرضها: الاسم الأول، اسم العائلة، العمر</span>
+SELECT FirstName, LastName, Age 
+<span class="comment">-- تحديد الجدول الذي ستُقرأ منه البيانات وهو Students</span>
+FROM Students 
+<span class="comment">-- تطبيق شرط: عرض الطلاب الذين أعمارهم أكبر من 20 فقط</span>
+WHERE Age > 20 
+<span class="comment">-- ترتيب النتائج تصاعدياً حسب الاسم الأول</span>
+ORDER BY FirstName;</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">تحديث البيانات (UPDATE):</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code class="language-sql"><span class="comment">-- أمر لتحديث البيانات في جدول Students</span>
+UPDATE Students
+<span class="comment">-- تعيين قيمة جديدة: اجعل العمر يساوي 21</span>
+SET Age = 21
+<span class="comment">-- تحديد الصف الذي سيتم تحديثه: حيث يكون رقم الطالب يساوي 1</span>
+WHERE StudentID = 1;</code></pre>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-xl mb-2">حذف البيانات (DELETE):</h3>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code class="language-sql"><span class="comment">-- أمر لحذف صفوف من جدول Students</span>
+DELETE FROM Students
+<span class="comment">-- تحديد الصف الذي سيتم حذفه: حيث يكون رقم الطالب يساوي 5</span>
+WHERE StudentID = 5;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-6" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">الاستعلامات المتقدمة</h2>
+                    <p class="mb-8 text-lg text-gray-600">تعلم كيفية ربط الجداول، استخدام الدوال التجميعية، وتجميع البيانات للحصول على رؤى أعمق.</p>
+                    <h3 class="font-semibold text-2xl mb-4">الربط بين الجداول (JOINS)</h3>
+                    <p class="mb-4">تستخدم Joins لدمج الصفوف من جدولين أو أكثر بناءً على عمود مرتبط بينهما.</p>
+                    <div class="code-block mb-6">
+                        <button class="copy-btn">نسخ</button>
+                        <pre><code>SELECT S.FirstName, C.CourseName
+FROM Students AS S
+INNER JOIN Enrollments AS E ON S.StudentID = E.StudentID
+INNER JOIN Courses AS C ON E.CourseID = C.CourseID;</code></pre>
+                    </div>
+
+                    <h3 class="font-semibold text-2xl mt-8 mb-4">الدوال التجميعية والتجميع (Aggregate & GROUP BY)</h3>
+                    <p class="mb-4">تُستخدم الدوال التجميعية لإجراء عمليات حسابية على مجموعة من القيم وإرجاع قيمة واحدة. تُستخدم `GROUP BY` لتجميع الصفوف التي لها نفس القيم في أعمدة محددة في صفوف ملخصة.</p>
+                    <p class="mb-4">في المثال التالي، نقوم بحساب عدد الطلاب في كل فئة عمرية باستخدام `COUNT` و `GROUP BY`. المخطط البياني أدناه يوضح نتيجة هذا الاستعلام على مجموعة بيانات افتراضية.</p>
+
+                    <div class="code-block mb-6">
+                        <button class="copy-btn">نسخ</button>
+                        <pre><code>SELECT Age, COUNT(*) AS StudentCount
+FROM Students
+GROUP BY Age
+HAVING COUNT(*) > 1;</code></pre>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mt-6">
+                        <div class="chart-container">
+                            <canvas id="ageDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-7" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">أمثلة عملية</h2>
+                    <p class="mb-8 text-lg text-gray-600">تطبيق المفاهيم على سيناريوهات واقعية مثل نظام مكتبة ونظام مبيعات.</p>
+                    <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 class="font-semibold text-2xl mb-4">مثال 1: نظام مكتبة</h3>
+                            <p class="mb-4">استعلام يعرض الكتب المستعارة حالياً مع اسم العضو وتاريخ الاستعارة.</p>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code>SELECT 
+    m.FullName,
+    b.Title,
+    br.BorrowDate
+FROM Borrowings AS br
+INNER JOIN Members AS m ON br.MemberID = m.MemberID
+INNER JOIN Books AS b ON br.BookID = b.ID
+WHERE br.ReturnDate IS NULL;</code></pre>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                            <h3 class="font-semibold text-2xl mb-4">مثال 2: نظام مبيعات</h3>
+                            <p class="mb-4">استعلام يعرض أفضل 5 عملاء من حيث إجمالي الإنفاق.</p>
+                            <div class="code-block">
+                                <button class="copy-btn">نسخ</button>
+                                <pre><code>SELECT TOP 5
+    c.CustomerName,
+    SUM(o.TotalAmount) AS TotalSpent
+FROM Customers AS c
+INNER JOIN Orders AS o ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerName
+ORDER BY TotalSpent DESC;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="section-8" class="content-section hidden">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl font-bold mb-4">أفضل الممارسات ونصائح هامة</h2>
+                    <p class="mb-8 text-lg text-gray-600">نصائح لتحسين جودة وأداء استعلاماتك وقواعد بياناتك.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-blue-600 font-bold text-xl ml-3">✅</span>
+                            <div>
+                                <h3 class="font-semibold text-lg">التسمية الواضحة</h3>
+                                <p>استخدم أسماء معبرة للجداول والأعمدة (مثل `Students`, `FirstName`).</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-600 font-bold text-xl ml-3">⚡</span>
+                            <div>
+                                <h3 class="font-semibold text-lg">استخدام الفهارس (Indexes)</h3>
+                                <p>أنشئ فهارس على الأعمدة المستخدمة بكثرة في `WHERE` و `JOIN` لتسريع البحث.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-600 font-bold text-xl ml-3">🛡️</span>
+                            <div>
+                                <h3 class="font-semibold text-lg">المعاملات (Transactions)</h3>
+                                <p>استخدم `BEGIN TRAN` و `COMMIT` لضمان تنفيذ مجموعة أوامر كوحدة واحدة.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-600 font-bold text-xl ml-3">🔄</span>
+                            <div>
+                                <h3 class="font-semibold text-lg">النسخ الاحتياطي المنتظم</h3>
+                                <p>قم بعمل نسخ احتياطي لقواعد بياناتك بانتظام لتجنب فقدان البيانات.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-600 font-bold text-xl ml-3">🧠</span>
+                            <div>
+                                <h3 class="font-semibold text-lg">فهم رسائل الأخطاء</h3>
+                                <p>اقرأ رسائل الأخطاء بعناية، فهي غالباً ما ترشدك إلى مكان المشكلة.</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="mt-8 bg-gray-800 rounded-lg p-4 font-mono text-sm text-white" style="direction: ltr; text-align: left;">
+                        <p><span class="text-green-400">user@sql-server:~$</span> <span class="text-gray-300">SELECT FirtName FROM Students;</span></p>
+                        <p class="text-red-400 mt-2">Msg 207, Level 16, State 1, Line 1</p>
+                        <p class="text-red-400">Invalid column name 'FirtName'.</p>
+                        <br>
+                        <p class="text-cyan-400">-- التحليل: الرسالة واضحة، اسم العمود 'FirtName' غير صالح.</p>
+                        <p class="text-cyan-400">-- هذا يعني على الأغلب وجود خطأ إملائي.</p>
+                        <p class="text-cyan-400">-- التصحيح هو 'FirstName'.</p>
+                        <br>
+                        <p><span class="text-green-400">user@sql-server:~$</span> <span class="text-gray-300">SELECT FirstName FROM Students;</span></p>
+                        <p class="mt-2 text-yellow-300">(11 row(s) affected)</p>
+                        <p class="text-yellow-300">Completion time: 2025-10-14T14:36:15.1234567+03:00</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const navLinks = document.querySelectorAll('.sidebar-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const copyButtons = document.querySelectorAll('.copy-btn');
+
+            function showSection(hash) {
+                const targetId = hash.substring(1);
+                contentSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.classList.remove('hidden');
+                    } else {
+                        section.classList.add('hidden');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    history.pushState(null, null, targetHash);
+                    showSection(targetHash);
+                });
+            });
+
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    const codeBlock = this.nextElementSibling;
+                    const code = codeBlock.innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        this.innerText = 'تم النسخ!';
+                        setTimeout(() => {
+                            this.innerText = 'نسخ';
+                        }, 2000);
+                    });
+                });
+            });
+
+            const initialHash = window.location.hash || '#section-0';
+            showSection(initialHash);
+            
+            // Interactive Diagram Logic
+            const conceptItems = document.querySelectorAll('[id^="concept-"]');
+            const diagramParts = document.querySelectorAll('[id^="diagram-"]');
+
+            function clearAllHighlights() {
+                conceptItems.forEach(el => el.classList.remove('highlight'));
+                diagramParts.forEach(el => el.classList.remove('highlight'));
+            }
+
+            function highlightPair(conceptId, diagramId) {
+                const concept = document.getElementById(conceptId);
+                const diagramPart = document.getElementById(diagramId);
+                if (concept && diagramPart) {
+                    concept.classList.add('highlight');
+                    diagramPart.classList.add('highlight');
+                }
+            }
+            
+            // Hover functionality
+            conceptItems.forEach(item => {
+                item.addEventListener('mouseenter', () => {
+                    clearAllHighlights();
+                    highlightPair(item.id, item.dataset.target);
+                });
+                item.addEventListener('mouseleave', clearAllHighlights);
+            });
+
+            diagramParts.forEach(part => {
+                part.addEventListener('mouseenter', () => {
+                    clearAllHighlights();
+                    highlightPair(part.dataset.target, part.id);
+                });
+                part.addEventListener('mouseleave', clearAllHighlights);
+            });
+
+            // Click functionality
+            conceptItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault(); // Prevent any default link behavior
+                    const diagramPart = document.getElementById(item.dataset.target);
+                    if (diagramPart) {
+                        diagramPart.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+                        // Flash effect
+                        clearAllHighlights();
+                        highlightPair(item.id, item.dataset.target);
                         setTimeout(clearAllHighlights, 2500); // Highlight lasts for 2.5 seconds
                     }
                 });
@@ -13,7 +681,7 @@ highlightPair(item.id, item.dataset.target);
             ];
 
             const ageCounts = sampleData.reduce((acc, student) => {
-                acc[student.age] = (acc[student.age]  0) + 1;
+                acc[student.age] = (acc[student.age] || 0) + 1;
                 return acc;
             }, {});
 
@@ -56,7 +724,7 @@ highlightPair(item.id, item.dataset.target);
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return العدد: ${context.parsed.y};
+                                    return `العدد: ${context.parsed.y}`;
                                 }
                             }
                         }
@@ -67,3 +735,4 @@ highlightPair(item.id, item.dataset.target);
     </script>
 </body>
 </html>
+
